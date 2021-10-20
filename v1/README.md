@@ -1,6 +1,8 @@
 # Análise de Evasão
 
-O [Preditor de Evasão Estudantil](preditor_V0.1.ipynb) apresenta uma abordagem inicial inicial.
+O [Preditor de Evasão Estudantil](preditor_V0.1.ipynb) apresenta uma abordagem inicial.
+
+Autor: Wladimir Ganzelevitch Mesquita Gramacho
 
 ## Referências
 

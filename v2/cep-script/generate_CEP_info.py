@@ -74,7 +74,7 @@ def request_route_info(cep_list):
 
     # Request route info using Google Maps Matrix Distance.
     def request_google_maps(address1, address2):
-        key = 'key_here'
+        key = '' # insert key
         request = requests.get(f'https://maps.googleapis.com/maps/api/distancematrix/json?units=metric'
                                f'&origins={address1}&destinations={address2}&key={key}')
         return json.loads(request.text)

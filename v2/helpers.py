@@ -1,4 +1,5 @@
 import json
+import pandas as pd
 
 def date_to_real(date):
     """
@@ -20,3 +21,14 @@ def read_json(file_name):
     """
     with open(file_name, 'r') as outfile:
         return json.load(outfile)
+
+def one_hot_encoding(data, columns):
+    """
+    Apply the one-hot encoding in the columns.
+    """
+    for col in columns:
+        one_hot = pd.get_dummies(data[col])
+        data = data.drop(col, axis = 1)
+        one_hot.columns = map(lambda x: f'{col}_{x}', one_hot.columns)
+        data = data.join(one_hot)
+    return data
