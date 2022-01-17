@@ -201,10 +201,10 @@ def request_route(cep_list, coordinate_json_file, route_json_file):
     return route_json
 
 
-DF_FILE = '../src/ie_data.csv'
-ADDRESS_JSON_FILE = 'files/address.json'
-COORDINATE_JSON_FILE = 'files/coordinate.json'
-ROUTE_JSON_FILE = 'files/route.json'
+DF_FILE = '../data/ie_data.csv'
+ADDRESS_JSON_FILE = '../data/address.json'
+COORDINATE_JSON_FILE = '../data/coordinate.json'
+ROUTE_JSON_FILE = '../data/route.json'
 
 cep_list = unique_ceps(DF_FILE)
 
