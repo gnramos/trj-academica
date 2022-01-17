@@ -1,1 +1,13 @@
-{}
+{
+	"70866130": {
+        "distance": {
+            "text": "4,9 km",
+            "value": 4864
+        },
+        "duration": {
+            "text": "10 minutos",
+            "value": 602
+        },
+        "status": "OK"
+    }
+}
