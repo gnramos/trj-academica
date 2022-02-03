@@ -1,4 +1,5 @@
 data/
+pipeline/.ipynb_checkpoints/
 
 *.pyc
 *.pyo
