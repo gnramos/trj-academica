@@ -1,16 +1,29 @@
 # Pre Process Module
 
-from hashlib import new
+import unicodedata
 import utils
 
 
 def format_data(data):
-    """Remove leading and trailing spaces, and lowers all string elements."""
+    """
+    Remove leading and trailing spaces, and lowers all string elements.
+    Also removes accents from the subjects names.
+    """
+    def strip_accents(s):
+        return ''.join(
+            c for c in unicodedata.normalize('NFD', s)
+            if unicodedata.category(c) != 'Mn'
+        )
+
     def format(value):
         return value.str.strip().str.lower()
 
     data = data.apply(lambda x: format(x) if x.dtype == 'object' else x)
     data.columns = format(data.columns)
+
+    attr = 'nome_disciplina'
+    data[attr] = data[attr].apply(lambda x: strip_accents(x))
+
     return data
 
 
@@ -44,12 +57,36 @@ def public_school(data, columns):
     return data
 
 
+def entry(data, columns):
+    """
+    Choose the four most frequent values for the entry form attribute,
+    aggregate the others, and rename the attribute.
+    """
+    attr = 'forma_ingresso_unb'
+    newattr = 'entry'
+
+    entry_types = [
+        'vestibular',
+        'programa de avaliação seriada',
+        'transferência obrigatória',
+        'sisu-sistema de seleção unificada',
+    ]
+
+    data[newattr] = data.apply(
+        lambda x: x[attr] if x[attr] in entry_types else 'outro', axis=1
+    )
+
+    columns.append(newattr)
+    return data
+
+
 def credits(data, columns):
     """
     Rename the attribute of the amout of approved credits
     and remove non numerical values.
     """
 
+    # TODO: calculate this using the disciplines
     # TODO: generate this attribute for every semester
     # TODO: use the other credits attributes in the dataset
     attr = 'creditos_aprovado_periodo'
@@ -69,8 +106,8 @@ def course(data, columns):
     newattr = 'course'
 
     data[newattr] = data[attr].replace({
-        "controle e automação": "engenharia mecatrônica",
         "engenharia mecatrônica - " +
+        "controle e automação": "engenharia mecatrônica",
         "controle e automação": "engenharia mecatrônica",
 
         "informática": "computação",
@@ -85,14 +122,14 @@ def course(data, columns):
 
 
 def dropout(data, columns):
-    """Transform the way out attribute into a boolean dropout one."""
+    """Transform the way out attribute into a boolean dropout attribute."""
     attr = 'forma_saida_curso'
     newattr = 'dropout'
 
     erase = ['falecimento', 'ativo']
     not_dropout = ['formatura', 'concluído']
 
-    data = data.drop(data.loc[data[attr].isin(erase)].index)
+    data.drop(data.loc[data[attr].isin(erase)].index, inplace=True)
     data[newattr] = data.apply(lambda x: x[attr] not in not_dropout, axis=1)
 
     columns.append(newattr)
@@ -104,7 +141,6 @@ def ira(data, columns):
 
     # TODO: calculate the ira according to student's mentions
     attr = 'ira'
-    data[attr] = data[attr]
 
     columns.append(attr)
     return data
@@ -126,16 +162,17 @@ def programming_subjects(data, columns):
 
     data.drop(data[~data[attr].isin(subjects)].index, inplace=True)
     data.sort_values('periodo_cursou_disciplina')
+    # keep the first occurrence (the earliest one)
     data.drop_duplicates(subset=['aluno'], inplace=True)
 
     notas = {
-        'SR': -3,
-        'II': -2,
-        'MI': -1,
-        'CC': 1,
-        'MM': 1,
-        'MS': 2,
-        'SS': 3
+        'sr': -3,
+        'ii': -2,
+        'mi': -1,
+        'cc': 1,
+        'mm': 1,
+        'ms': 2,
+        'ss': 3
     }
 
     data[newattr] = 0
@@ -148,6 +185,75 @@ def programming_subjects(data, columns):
             # data.drop(index, inplace=True)
 
     columns.append(newattr)
+    return data
+
+
+def subjects(data, columns):
+    """
+    Generate an attribute for every subject, informing the student's
+    grade (mention) numerically.
+    It considers at most 20 of the most frequent subjects from the first year.
+    """
+
+    def beyond_horizon(row):
+        """
+        Compare the student's entry with the semester the subject was attended,
+        and check if it was attended within the horizon.
+        """
+        horizon_years = 1  # 1 year = 2 semesters
+        return (
+            utils.date_to_real(row['periodo_cursou_disciplina']) -
+            utils.date_to_real(row['periodo_ingresso_curso']) >= horizon_years
+        )
+
+    attr_subject = 'nome_disciplina'
+    attr_grade = 'mencao_disciplina'
+
+    notas = {
+        'sr': -3,
+        'ii': -2,
+        'mi': -1,
+        'cc': 1,
+        'mm': 1,
+        'ms': 2,
+        'ss': 3
+    }
+    # Transform the grades (mentions) into an number
+    data[attr_grade] = data.apply(
+        lambda x: notas[x[attr_grade]] if x[attr_grade] in notas else 0, axis=1
+    )
+
+    # Remove subjects done after the horizon.
+    data.drop(data[data.apply(beyond_horizon, axis=1)].index, inplace=True)
+
+    # Keep only the first occurrence of a subject.
+    # TODO: consider the other attempts.
+    data.sort_values('periodo_cursou_disciplina')
+    data.drop_duplicates(subset=['aluno', attr_subject], inplace=True)
+
+    print(data.shape)
+    # Keep only the 20 most frequent subjects.
+    n_subjects = 20
+    subjects = data[attr_subject].value_counts()[0:n_subjects].index.to_list()
+    data.drop(data.loc[~data[attr_subject].isin(subjects)].index, inplace=True)
+
+    print(data.shape)
+    # Transform each subject into an attribute.
+    index = data.columns.difference([attr_grade, attr_subject]).tolist()
+    data = data.pivot_table(
+        values=attr_grade,
+        index=index,
+        columns=attr_subject,
+        aggfunc='first',
+        fill_value=0,  # Not Attended
+    ).reset_index()
+
+    print(data.shape)
+
+    subjects = data.columns.difference(index).tolist()
+
+    columns.extend(subjects)
+
     return data
 
 
@@ -195,5 +301,6 @@ def divide_course(data):
     data_courses = {}
     for course in data[attr].unique():
         data_courses[course] = data.copy()[data[attr] == course]
+        # data_courses[course].drop(attr, axis=1, inplace=True)
 
     return data_courses

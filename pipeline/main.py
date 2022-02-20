@@ -1,54 +1,35 @@
-import matplotlib as plt
-import seaborn as sns
+from defer import inline_callbacks
 import pandas as pd
 import numpy as np
-import os
+import matplotlib.pyplot as plt
+import seaborn as sns
 
+import sklearn.metrics
 from sklearn.model_selection import train_test_split
 from catboost import CatBoostClassifier
-import sklearn.metrics
+
+import pre_process
+import utils
+
 
 import pre_process
 
-# TODO: make the relative path relative to the main.py file.
-DATA_FILE = '../data/ie_data.csv'
-data = pd.read_csv(DATA_FILE, sep=';', low_memory=False)
-# Remove leading and trailing spaces
-data = data.apply(lambda x: x.str.strip() if x.dtype == "object" else x)
+DATA_FILE = '/home/tiago/git/trj-academica/data/ie_data.csv'
+data_0 = pd.read_csv(DATA_FILE, sep=';', low_memory=False)
 
 # Pre-Process
 columns = ['cep']
-data = pre_process.dropout(data, columns)
-data = pre_process.public_school(data, columns)
-data = pre_process.course(data, columns)
-data = pre_process.gender(data, columns)
-data = pre_process.quota(data, columns)
-data = pre_process.ira(data, columns)
-data = pre_process.programming_subjects(data, columns)
+data_0 = pre_process.format_data(data_0)
+data_0 = pre_process.public_school(data_0, columns)
+data_0 = pre_process.credits(data_0, columns)
+data_0 = pre_process.dropout(data_0, columns)
+data_0 = pre_process.course(data_0, columns)
+data_0 = pre_process.gender(data_0, columns)
+data_0 = pre_process.quota(data_0, columns)
+data_0 = pre_process.entry(data_0, columns)
 
-data = data[columns]
-data.drop_duplicates(inplace=True)
-
-# cep before drop_duplicates, so it doesn't take too long to process
-data = pre_process.cep(data, columns)
-
-print(data.columns)
-print(data.head())
-
-# Process
-attr = 'dropout'
-X = data.drop(columns=[attr])
-y = data[attr]
-X_train, X_test, y_train, y_test = train_test_split(
-    X, y, test_size=0.3, random_state=42, stratify=y
-)
-
-model = CatBoostClassifier()
-# model.fit(X_train, y_train, cat_features=[2], plot=True)
-model.fit(X_train, y_train, cat_features=[2])
-
-predictions = model.predict(X_test)
-predictions = [x == 'True' for x in predictions]
-print("Accuracy score:", sklearn.metrics.accuracy_score(y_test, predictions))
-print("Recall score:", sklearn.metrics.recall_score(y_test, predictions))
-print("Precusion score:", sklearn.metrics.precision_score(y_test, predictions))
+data_course = pre_process.divide_course(data_0)
+meca = data_course['engenharia mecatrônica']
+meca = pre_process.subjects(meca, columns)
+data_1 = meca.copy()[columns].drop_duplicates()
+# data_1 = pre_process.cep(data_1, columns)
