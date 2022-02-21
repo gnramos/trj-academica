@@ -27,37 +27,37 @@ def format_data(data):
     return data
 
 
-def gender(data, columns):
+def gender(data, attrs):
     """Tranform the gender attribute in a boolean and rename it."""
     attr = 'genero'
     newattr = 'female'
     data[newattr] = data.apply(lambda x: x[attr] == 'f', axis=1)
 
-    columns.append(newattr)
+    attrs.append(newattr)
     return data
 
 
-def quota(data, columns):
+def quota(data, attrs):
     """Tranform the quota attribute in a boolean and rename it."""
     attr = 'sistema_cotas'
     newattr = 'quota'
     data[newattr] = data.apply(lambda x: x[attr] == 'sim', axis=1)
 
-    columns.append(newattr)
+    attrs.append(newattr)
     return data
 
 
-def public_school(data, columns):
+def public_school(data, attrs):
     """Tranform the school type attribute in a boolean and rename it."""
     attr = 'escola'
     newattr = 'public_school'
     data[newattr] = data.apply(lambda x: x[attr] == 'publica', axis=1)
 
-    columns.append(newattr)
+    attrs.append(newattr)
     return data
 
 
-def entry(data, columns):
+def entry(data, attrs):
     """
     Choose the four most frequent values for the entry form attribute,
     aggregate the others, and rename the attribute.
@@ -76,11 +76,11 @@ def entry(data, columns):
         lambda x: x[attr] if x[attr] in entry_types else 'outro', axis=1
     )
 
-    columns.append(newattr)
+    attrs.append(newattr)
     return data
 
 
-def credits(data, columns):
+def credits(data, attrs):
     """
     Rename the attribute of the amout of approved credits
     and remove non numerical values.
@@ -95,12 +95,12 @@ def credits(data, columns):
         lambda x: x[attr] if x.dtype == 'object' else 0, axis=1
     )
 
-    columns.append(newattr)
+    attrs.append(newattr)
 
     return data
 
 
-def course(data, columns):
+def course(data, attrs):
     """Group and rename the courses names."""
     attr = 'curso'
     newattr = 'course'
@@ -117,11 +117,11 @@ def course(data, columns):
         "matematica - bacharelado diurno": "matemática"
     })
 
-    columns.append(newattr)
+    attrs.append(newattr)
     return data
 
 
-def dropout(data, columns):
+def dropout(data, attrs):
     """Transform the way out attribute into a boolean dropout attribute."""
     attr = 'forma_saida_curso'
     newattr = 'dropout'
@@ -132,21 +132,21 @@ def dropout(data, columns):
     data.drop(data.loc[data[attr].isin(erase)].index, inplace=True)
     data[newattr] = data.apply(lambda x: x[attr] not in not_dropout, axis=1)
 
-    columns.append(newattr)
+    attrs.append(newattr)
     return data
 
 
-def ira(data, columns):
+def ira(data, attrs):
     """Calculate the IRA (Academic Performance Index)."""
 
     # TODO: calculate the ira according to student's mentions
     attr = 'ira'
 
-    columns.append(attr)
+    attrs.append(attr)
     return data
 
 
-def programming_subjects(data, columns):
+def programming_subjects(data, attrs):
     """Isolate the initial programming subject."""
 
     attr = 'nome_disciplina'
@@ -184,11 +184,11 @@ def programming_subjects(data, columns):
             data.at[index, newattr] = 0
             # data.drop(index, inplace=True)
 
-    columns.append(newattr)
+    attrs.append(newattr)
     return data
 
 
-def subjects(data, columns):
+def subjects(data, attrs):
     """
     Generate an attribute for every subject, informing the student's
     grade (mention) numerically.
@@ -252,12 +252,12 @@ def subjects(data, columns):
 
     subjects = data.columns.difference(index).tolist()
 
-    columns.extend(subjects)
+    attrs.extend(subjects)
 
     return data
 
 
-def cep(data, columns):
+def cep(data, attrs):
     """
     Transform the cep into the distance from the student's home
     to the University of Brasília. Uses the data requested using the
@@ -291,7 +291,7 @@ def cep(data, columns):
             else:
                 data.at[index, newattr] = dist
 
-    columns.append(newattr)
+    attrs.append(newattr)
     return data
 
 
