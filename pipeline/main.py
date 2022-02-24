@@ -24,6 +24,7 @@ data_pre = pd.read_csv(DATA_FILE, sep=';', low_memory=False)
 
 attrs = []
 data_pre = pre_process.format_data(data_pre)
+data_pre = pre_process.erase_attr(data_pre)
 data_pre = pre_process.public_school(data_pre, attrs)
 data_pre = pre_process.credits(data_pre, attrs)
 data_pre = pre_process.dropout(data_pre, attrs)
@@ -38,6 +39,7 @@ data_pre = pre_process.programming_subjects(data_pre, attrs)
 # otherwise it takes too long to process.
 data_pre = data_pre[attrs+['cep']].drop_duplicates()
 data_pre = pre_process.cep(data_pre, attrs)
+data_analysis = data_pre.copy()
 data_pre = data_pre.drop(columns='cep')
 
 # Dataframe used by the algorithms

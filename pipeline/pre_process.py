@@ -4,6 +4,29 @@ import unicodedata
 import utils
 
 
+def erase_attr(data):
+    """Erase unused attributes."""
+    attrs = [
+        'sistema_origem',
+        'id_pessoa',
+        'ira',
+        'endereco',
+        'estado_nascimento',
+        'cota',
+        'raca',
+        'chamada_ingressou_unb',
+        'ano_ensino_medio',
+        'modalidade_disciplina',
+        'media_semestre_aluno',
+        'min_cred_para_formatura',
+        'total_creditos_cursados_aluno',
+        'codigo_disciplina',
+        'media_semestre_aluno',
+    ]
+    data = data.drop(columns=attrs)
+    return data
+
+
 def format_data(data):
     """
     Remove leading and trailing spaces, and lowers all string elements.
@@ -31,7 +54,8 @@ def gender(data, attrs):
     """Tranform the gender attribute in a boolean and rename it."""
     attr = 'genero'
     newattr = 'female'
-    data[newattr] = data.apply(lambda x: x[attr] == 'f', axis=1)
+    data[attr] = data.apply(lambda x: x[attr] == 'f', axis=1)
+    data = data.rename({attr: newattr}, axis=1)
 
     attrs.append(newattr)
     return data
@@ -41,7 +65,8 @@ def quota(data, attrs):
     """Tranform the quota attribute in a boolean and rename it."""
     attr = 'sistema_cotas'
     newattr = 'quota'
-    data[newattr] = data.apply(lambda x: x[attr] == 'sim', axis=1)
+    data[attr] = data.apply(lambda x: x[attr] == 'sim', axis=1)
+    data = data.rename({attr: newattr}, axis=1)
 
     attrs.append(newattr)
     return data
@@ -51,7 +76,8 @@ def public_school(data, attrs):
     """Tranform the school type attribute in a boolean and rename it."""
     attr = 'escola'
     newattr = 'public_school'
-    data[newattr] = data.apply(lambda x: x[attr] == 'publica', axis=1)
+    data[attr] = data.apply(lambda x: x[attr] == 'publica', axis=1)
+    data = data.rename({attr: newattr}, axis=1)
 
     attrs.append(newattr)
     return data
@@ -72,32 +98,33 @@ def entry(data, attrs):
         'sisu-sistema de seleção unificada',
     ]
 
-    data[newattr] = data.apply(
+    data[attr] = data.apply(
         lambda x: x[attr] if x[attr] in entry_types else 'outro', axis=1
     )
+    data = data.rename({attr: newattr}, axis=1)
 
     attrs.append(newattr)
     return data
 
 
-def credits(data, attrs):
-    """
-    Rename the attribute of the amout of approved credits
-    and remove non numerical values.
-    """
+# def credits(data, attrs):
+#     """
+#     Rename the attribute of the amout of approved credits
+#     and remove non numerical values.
+#     """
 
-    # TODO: calculate this using the disciplines
-    # TODO: generate this attribute for every semester
-    # TODO: use the other credits attributes in the dataset
-    attr = 'creditos_aprovado_periodo'
-    newattr = 'approved_credits'
-    data[newattr] = data.apply(
-        lambda x: x[attr] if x.dtype == 'object' else 0, axis=1
-    )
+#     # TODO: calculate this using the disciplines
+#     # TODO: generate this attribute for every semester
+#     # TODO: use the other credits attributes in the dataset
+#     attr = 'creditos_aprovado_periodo'
+#     newattr = 'approved_credits'
+#     data[newattr] = data.apply(
+#         lambda x: x[attr] if x.dtype == 'object' else 0, axis=1
+#     )
 
-    attrs.append(newattr)
+#     attrs.append(newattr)
 
-    return data
+#     return data
 
 
 def course(data, attrs):
@@ -105,7 +132,7 @@ def course(data, attrs):
     attr = 'curso'
     newattr = 'course'
 
-    data[newattr] = data[attr].replace({
+    data[attr] = data[attr].replace({
         "engenharia mecatrônica - " +
         "controle e automação": "engenharia mecatrônica",
         "controle e automação": "engenharia mecatrônica",
@@ -116,6 +143,7 @@ def course(data, attrs):
         "matematica - licenciatura diurno": "matemática",
         "matematica - bacharelado diurno": "matemática"
     })
+    data = data.rename({attr: newattr}, axis=1)
 
     attrs.append(newattr)
     return data
@@ -130,7 +158,8 @@ def dropout(data, attrs):
     not_dropout = ['formatura', 'concluído']
 
     data.drop(data.loc[data[attr].isin(erase)].index, inplace=True)
-    data[newattr] = data.apply(lambda x: x[attr] not in not_dropout, axis=1)
+    data[attr] = data.apply(lambda x: x[attr] not in not_dropout, axis=1)
+    data = data.rename({attr: newattr}, axis=1)
 
     attrs.append(newattr)
     return data
@@ -138,12 +167,7 @@ def dropout(data, attrs):
 
 def ira(data, attrs):
     """Calculate the IRA (Academic Performance Index)."""
-
-    # TODO: calculate the ira according to student's mentions
-    attr = 'ira'
-
-    attrs.append(attr)
-    return data
+    pass
 
 
 def programming_subjects(data, attrs):
@@ -231,13 +255,21 @@ def subjects(data, attrs):
     data.sort_values('periodo_cursou_disciplina')
     data.drop_duplicates(subset=['aluno', attr_subject], inplace=True)
 
-    print(data.shape)
     # Keep only the 20 most frequent subjects.
     n_subjects = 20
     subjects = data[attr_subject].value_counts()[0:n_subjects].index.to_list()
     data.drop(data.loc[~data[attr_subject].isin(subjects)].index, inplace=True)
 
-    print(data.shape)
+    # Removes attributes that are different for a single student
+    # (so we can use pivot_table)
+    out = [
+        'periodo_cursou_disciplina',
+        'creditos_no_periodo',
+        'creditos_aprovado_periodo',
+        'creditos_disciplina',
+    ]
+    data = data.drop(columns=out)
+
     # Transform each subject into an attribute.
     index = data.columns.difference([attr_grade, attr_subject]).tolist()
     data = data.pivot_table(
@@ -247,11 +279,9 @@ def subjects(data, attrs):
         aggfunc='first',
         fill_value=0,  # Not Attended
     ).reset_index()
-
-    print(data.shape)
+    data.index.name = None
 
     subjects = data.columns.difference(index).tolist()
-
     attrs.extend(subjects)
 
     return data
@@ -266,6 +296,8 @@ def cep(data, attrs):
 
     attr = 'cep'
     newattr = 'distance'
+
+    data.dropna(subset=[attr])
 
     route_json = utils.read_json('../data/route.json')
     address_json = utils.read_json('../data/address.json')
