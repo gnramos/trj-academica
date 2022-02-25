@@ -304,6 +304,9 @@ def cep(data, attrs):
     # coordinate_json = utils.read_json('../data/coordinate.json')
     data[attr] = data.apply(lambda x: utils.format_cep(x[attr]), axis=1)
 
+    cep_unb = '70910900'
+    data.drop(data[data[attr] == cep_unb].index, inplace=True)
+
     data[newattr] = 0
 
     for index, row in data.iterrows():

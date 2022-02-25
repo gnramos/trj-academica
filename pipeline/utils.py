@@ -4,6 +4,7 @@ import json
 import os
 import re
 import matplotlib.pyplot as plt
+import numpy as np
 
 
 def write_json(json_info, file):
@@ -52,14 +53,62 @@ def plot_coordinates(data, title):
     for index, row in data.iterrows():
         cep = str(row[attr])
         info = coordinate_json[cep]
-        if info['lat'] < -17:
+        if info['lat'] < -17 or info['lat'] > -15.5:
             data.drop(index, inplace=True)
             continue
         x.append(info['lat'])
         y.append(-info['lng'])
         c.append('red' if row['dropout'] else 'blue')
 
-    plt.figure(figsize=(10, 10))
+    plt.figure(figsize=(30, 40))
     plt.title(title)
     plt.scatter(x, y, c=c, alpha=0.2)
+    plt.savefig(f'img/{title}_plot.pdf')
+    plt.show()
+
+
+def plot_coordinates_density(data, title):
+
+    import scipy.stats
+    xi = []
+    yi = []
+    ci = []
+
+    coordinate_json = read_json('../data/coordinate.json')
+    attr = 'cep'
+
+    for index, row in data.iterrows():
+        cep = str(row[attr])
+        info = coordinate_json[cep]
+        if info['lat'] < -17 or info['lat'] > -15.5:
+            data.drop(index, inplace=True)
+            continue
+        if(row['dropout']):
+            xi.append(info['lat'])
+            yi.append(-info['lng'])
+        # ci.append('red' if row['dropout'] else 'blue')
+
+    x = np.array(xi)
+    y = np.array(yi)
+    # c = np.array(ci)
+
+    plt.figure(figsize=(30, 40))
+    plt.title(title)
+
+    nbins = 1000
+    k = scipy.stats.gaussian_kde([x, y], bw_method=0.05)
+    xi, yi = np.mgrid[x.min():x.max():nbins*1j, y.min():y.max():nbins*1j]
+    zi = k(np.vstack([xi.flatten(), yi.flatten()]))
+
+    # Make the plot
+    plt.pcolormesh(xi, yi, zi.reshape(xi.shape), shading='auto')
+
+    # Change color palette
+    plt.pcolormesh(
+        xi, yi, zi.reshape(xi.shape),
+        shading='auto', cmap=plt.cm.seismic
+    )
+    plt.colorbar()
+
+    plt.savefig(f'img/{title}.png')
     plt.show()
