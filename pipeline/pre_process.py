@@ -37,8 +37,8 @@ def erase_interal_transfer_students(data):
     students = set()
     for _, row in data.iterrows():
         entry = row['periodo_ingresso_curso']
-        course = row['periodo_cursou_disciplina']
-        if utils.date_to_real(entry) > utils.date_to_real(course):
+        subject = row['periodo_cursou_disciplina']
+        if utils.date_to_real(entry) > utils.date_to_real(subject):
             students.add(row['aluno'])
 
     data = data.drop(data.loc[data['aluno'].isin(students)].index)
@@ -148,6 +148,7 @@ def course(data, attrs):
 
 
 def cic_courses(data):
+    """Keep only courses from the computer science departament (CIC-UNB)"""
     cic_courses = [
         'ciência da computação',
         'computação',
@@ -179,48 +180,6 @@ def ira(data, attrs):
     """Calculate the IRA (Academic Performance Index)."""
     attr = 'ira'
     attrs.append(attr)
-    return data
-
-
-def programming_subjects(data, attrs):
-    """Isolate the initial programming subject."""
-
-    attr = 'nome_disciplina'
-    newattr = 'programming_subject'
-
-    subjects = [
-        'introdução à ciência da computação',
-        'computacao basica',
-        'algoritmos e programação de computadores',
-        'algoritmos e estrutura de dados',
-        'computacao para engenharia'
-    ]
-
-    data.drop(data[~data[attr].isin(subjects)].index, inplace=True)
-    data.sort_values('periodo_cursou_disciplina')
-    # keep the first occurrence (the earliest one)
-    data.drop_duplicates(subset=['aluno'], inplace=True)
-
-    notas = {
-        'sr': -3,
-        'ii': -2,
-        'mi': -1,
-        'cc': 1,
-        'mm': 1,
-        'ms': 2,
-        'ss': 3
-    }
-
-    data[newattr] = 0
-
-    for index, row in data.iterrows():
-        if row['mencao_disciplina'] in notas:
-            data.at[index, newattr] = notas[row['mencao_disciplina']]
-        else:
-            data.at[index, newattr] = 0
-            # data.drop(index, inplace=True)
-
-    attrs.append(newattr)
     return data
 
 
@@ -285,6 +244,8 @@ def subjects(data, attrs):
     # Keep only the first occurrence of a subject/semester.
     data.sort_values('periodo_cursou_disciplina')
     data.drop_duplicates(subset=['aluno', attr_subject], inplace=True)
+
+    print(data['nome_disciplina'].value_counts()[:20])
 
     # Keep only the 25 most frequent subjects/semester.
     n_subjects = 25
@@ -364,9 +325,8 @@ def cep(data, attrs):
 def divide_course(data):
     """Return a dictionary with subsets of the data, separated by course."""
     attr = 'course'
-    data_courses = {}
+    data_course = {}
     for course in data[attr].unique():
-        data_courses[course] = data.copy()[data[attr] == course]
-        # data_courses[course].drop(attr, axis=1, inplace=True)
+        data_course[course] = data.copy()[data[attr] == course]
 
-    return data_courses
+    return data_course

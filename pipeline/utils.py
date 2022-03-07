@@ -32,15 +32,15 @@ def format_cep(cep):
 def date_to_real(date):
     """
     Transform the date into a real number.
-    Dates are in the format YYYY/S.
+    Dates are in the format YYYYS.
     Ex:
-    2018/2 -> 2018.5
-    2018/1 -> 2018.0
-    2018/0 -> 2018.0
+    20182 -> 2018.5
+    20181 -> 2018.0
+    20180 -> 2018.0
     Summer courses are processed as if they were done
     in the first semester of the year.
     """
-    year = date / 10
+    year = date // 10
     semester = date % 10
     return year + 0.5 * (semester == 2)
 
