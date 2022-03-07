@@ -9,7 +9,7 @@ def erase_attr(data):
     attrs = [
         'sistema_origem',
         'id_pessoa',
-        'ira',
+        # 'ira',
         'endereco',
         'estado_nascimento',
         'cota',
@@ -24,6 +24,24 @@ def erase_attr(data):
         'media_semestre_aluno',
     ]
     data = data.drop(columns=attrs)
+    return data
+
+
+def erase_interal_transfer_students(data):
+    """
+    Remove students that attended to other courses before their entry.
+    Those students have done some subjects before their entry in the course,
+    making it impossible to know in what semester they attended the subject
+    in relation to their entry.
+    """
+    students = set()
+    for _, row in data.iterrows():
+        entry = row['periodo_ingresso_curso']
+        course = row['periodo_cursou_disciplina']
+        if utils.date_to_real(entry) > utils.date_to_real(course):
+            students.add(row['aluno'])
+
+    data = data.drop(data.loc[data['aluno'].isin(students)].index)
     return data
 
 
@@ -107,26 +125,6 @@ def entry(data, attrs):
     return data
 
 
-# def credits(data, attrs):
-#     """
-#     Rename the attribute of the amout of approved credits
-#     and remove non numerical values.
-#     """
-
-#     # TODO: calculate this using the disciplines
-#     # TODO: generate this attribute for every semester
-#     # TODO: use the other credits attributes in the dataset
-#     attr = 'creditos_aprovado_periodo'
-#     newattr = 'approved_credits'
-#     data[newattr] = data.apply(
-#         lambda x: x[attr] if x.dtype == 'object' else 0, axis=1
-#     )
-
-#     attrs.append(newattr)
-
-#     return data
-
-
 def course(data, attrs):
     """Group and rename the courses names."""
     attr = 'curso'
@@ -149,6 +147,18 @@ def course(data, attrs):
     return data
 
 
+def cic_courses(data):
+    cic_courses = [
+        'ciência da computação',
+        'computação',
+        'engenharia de computação',
+        'engenharia mecatrônica'
+    ]
+    attr = 'course'
+    data.drop(data.loc[~data[attr].isin(cic_courses)].index, inplace=True)
+    return data
+
+
 def dropout(data, attrs):
     """Transform the way out attribute into a boolean dropout attribute."""
     attr = 'forma_saida_curso'
@@ -167,7 +177,9 @@ def dropout(data, attrs):
 
 def ira(data, attrs):
     """Calculate the IRA (Academic Performance Index)."""
-    pass
+    attr = 'ira'
+    attrs.append(attr)
+    return data
 
 
 def programming_subjects(data, attrs):
@@ -214,21 +226,44 @@ def programming_subjects(data, attrs):
 
 def subjects(data, attrs):
     """
-    Generate an attribute for every subject, informing the student's
-    grade (mention) numerically.
-    It considers at most 20 of the most frequent subjects from the first year.
+    Generate an attribute for every subject, and for every semester,
+    informing the student's grade (mention) numerically.
+    It considers at most 20 of the most frequent
+    subjects/semester from the first year.
     """
 
-    def beyond_horizon(row):
+    def beyond_horizon(data):
         """
         Compare the student's entry with the semester the subject was attended,
-        and check if it was attended within the horizon.
+        and remove it if it was attended beyond the horizon.
         """
-        horizon_years = 1  # 1 year = 2 semesters
-        return (
-            utils.date_to_real(row['periodo_cursou_disciplina']) -
-            utils.date_to_real(row['periodo_ingresso_curso']) >= horizon_years
-        )
+        def horizon(row):
+            year = 1  # 1 year = 2 semesters
+            return (
+                utils.date_to_real(row['periodo_cursou_disciplina']) -
+                utils.date_to_real(row['periodo_ingresso_curso']) >= year
+            )
+        data.drop(data[data.apply(horizon, axis=1)].index, inplace=True)
+        return data
+
+    def subject_semester(data):
+        """
+        Add a prefix to the subject name, informing the semester it was
+        attended.
+        Ex: calculo 1 -> 1_calculo 1
+        """
+        def add_semester_prefix(row):
+            semester = 1 + int(
+                2 * utils.date_to_real(row['periodo_cursou_disciplina']) -
+                2 * utils.date_to_real(row['periodo_ingresso_curso'])
+            )
+            return f"{semester}_{row['nome_disciplina']}"
+
+        data['nome_disciplina'] = data.apply(add_semester_prefix, axis=1)
+        return data
+
+    data = beyond_horizon(data)
+    data = subject_semester(data)
 
     attr_subject = 'nome_disciplina'
     attr_grade = 'mencao_disciplina'
@@ -247,16 +282,12 @@ def subjects(data, attrs):
         lambda x: notas[x[attr_grade]] if x[attr_grade] in notas else 0, axis=1
     )
 
-    # Remove subjects done after the horizon.
-    data.drop(data[data.apply(beyond_horizon, axis=1)].index, inplace=True)
-
-    # Keep only the first occurrence of a subject.
-    # TODO: consider the other attempts.
+    # Keep only the first occurrence of a subject/semester.
     data.sort_values('periodo_cursou_disciplina')
     data.drop_duplicates(subset=['aluno', attr_subject], inplace=True)
 
-    # Keep only the 20 most frequent subjects.
-    n_subjects = 20
+    # Keep only the 25 most frequent subjects/semester.
+    n_subjects = 25
     subjects = data[attr_subject].value_counts()[0:n_subjects].index.to_list()
     data.drop(data.loc[~data[attr_subject].isin(subjects)].index, inplace=True)
 
@@ -291,7 +322,7 @@ def cep(data, attrs):
     """
     Transform the cep into the distance from the student's home
     to the University of Brasília. Uses the data requested using the
-    cep_gen.py script.
+    cep_gen.py script. It removes students from out of the region (DF).
     """
 
     attr = 'cep'

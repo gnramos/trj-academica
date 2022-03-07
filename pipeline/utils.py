@@ -3,8 +3,10 @@
 import json
 import os
 import re
-import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
 
 
 def write_json(json_info, file):
@@ -41,6 +43,22 @@ def date_to_real(date):
     year = date / 10
     semester = date % 10
     return year + 0.5 * (semester == 2)
+
+
+def plot_feature_importance(importance, names, model_type):
+    plt.style.use('ggplot')
+    data = {
+        'feature_names': np.array(names),
+        'feature_importance': np.array(importance)
+    }
+    fi_df = pd.DataFrame(data)
+    fi_df.sort_values(by=['feature_importance'], ascending=False, inplace=True)
+    plt.figure(figsize=(10, 8))
+    sns.barplot(x=fi_df['feature_importance'], y=fi_df['feature_names'])
+    plt.title(model_type + 'Feature Importance')
+    plt.xlabel('Feature Importance')
+    plt.ylabel('Feature Name')
+    plt.show()
 
 
 def plot_coordinates(data, title):
@@ -101,9 +119,6 @@ def plot_coordinates_density(data, title):
     zi = k(np.vstack([xi.flatten(), yi.flatten()]))
 
     # Make the plot
-    plt.pcolormesh(xi, yi, zi.reshape(xi.shape), shading='auto')
-
-    # Change color palette
     plt.pcolormesh(
         xi, yi, zi.reshape(xi.shape),
         shading='auto', cmap=plt.cm.seismic
