@@ -1,5 +1,6 @@
 # Pre Process Module
 
+from re import sub
 import unicodedata
 import utils
 
@@ -9,7 +10,7 @@ def erase_attr(data):
     attrs = [
         'sistema_origem',
         'id_pessoa',
-        # 'ira',
+        'ira',
         'endereco',
         'estado_nascimento',
         'cota',
@@ -176,14 +177,49 @@ def dropout(data, attrs):
     return data
 
 
-def ira(data, attrs):
-    """Calculate the IRA (Academic Performance Index)."""
-    attr = 'ira'
-    attrs.append(attr)
+def add_semester_prefix(data):
+    """
+    Add a prefix to the subject name, informing the semester it was
+    attended.
+    Ex: calculo 1 -> 1_calculo 1
+    """
+    def add_semester_prefix(row):
+        semester = 1 + int(
+            2 * utils.date_to_real(row['periodo_cursou_disciplina']) -
+            2 * utils.date_to_real(row['periodo_ingresso_curso'])
+        )
+        return f"{semester}_{row['nome_disciplina']}"
+
+    data['nome_disciplina'] = data.apply(add_semester_prefix, axis=1)
     return data
 
 
-def subjects(data, attrs):
+def subject_credits(data):
+    credits_dict = dict()
+    data_subjects = data[['nome_disciplina', 'creditos_disciplina']].copy()
+    data_subjects = data_subjects.drop_duplicates()
+
+    for _, row in data.iterrows():
+        credits_dict[row['nome_disciplina']] = row['creditos_disciplina']
+
+    return credits_dict
+
+
+def beyond_horizon(data, horizon):
+    """
+    Compare the student's entry with the semester the subject was attended,
+    and remove it if it was attended beyond the horizon.
+    """
+    def hor(row):
+        return (
+            utils.date_to_real(row['periodo_cursou_disciplina']) -
+            utils.date_to_real(row['periodo_ingresso_curso']) >= horizon
+        )
+    data.drop(data[data.apply(hor, axis=1)].index, inplace=True)
+    return data
+
+
+def subjects(data, attrs, horizon, credits_dict):
     """
     Generate an attribute for every subject, and for every semester,
     informing the student's grade (mention) numerically.
@@ -191,66 +227,93 @@ def subjects(data, attrs):
     subjects/semester from the first year.
     """
 
-    def beyond_horizon(data):
+    def credits_attr(data, subjects, attrs, credits_dict, horizon):
         """
-        Compare the student's entry with the semester the subject was attended,
-        and remove it if it was attended beyond the horizon.
+        Add the quantity of credits failed and approved per semester
+        as attributes.
         """
-        def horizon(row):
-            year = 1  # 1 year = 2 semesters
-            return (
-                utils.date_to_real(row['periodo_cursou_disciplina']) -
-                utils.date_to_real(row['periodo_ingresso_curso']) >= year
-            )
-        data.drop(data[data.apply(horizon, axis=1)].index, inplace=True)
+        for semester in range(1, 2*horizon+1):
+            attrs.append(f'{semester}_failed_credits')
+            attrs.append(f'{semester}_approved_credits')
+            data[f'{semester}_failed_credits'] = 0
+            data[f'{semester}_approved_credits'] = 0
+
+        failed = ['sr', 'ii', 'mi', 'tr']
+        approved = ['ss', 'ms', 'mm', 'cc']
+
+        for sub_attr in subjects:
+            semester, subject = sub_attr.split('_')
+            credits = credits_dict[subject]
+            data.loc[data[sub_attr].isin(failed),
+                     f'{semester}_failed_credits'] += credits
+            data.loc[data[sub_attr].isin(approved),
+                     f'{semester}_approved_credits'] += credits
+
         return data
 
-    def subject_semester(data):
-        """
-        Add a prefix to the subject name, informing the semester it was
-        attended.
-        Ex: calculo 1 -> 1_calculo 1
-        """
-        def add_semester_prefix(row):
-            semester = 1 + int(
-                2 * utils.date_to_real(row['periodo_cursou_disciplina']) -
-                2 * utils.date_to_real(row['periodo_ingresso_curso'])
-            )
-            return f"{semester}_{row['nome_disciplina']}"
+    def ira_attr(data, subjects, attrs, credits_dict, horizon):
+        grades = {'ss': 5, 'ms': 4, 'mm': 3, 'mi': 2, 'ii': 1, 'sr': 0}
+        for semester in range(1, 2*horizon+1):
+            attrs.append(f'{semester}_ira')
+            data[f'{semester}_ira'] = 0
+            data[f'{semester}_total'] = 0
 
-        data['nome_disciplina'] = data.apply(add_semester_prefix, axis=1)
+        for sub_attr in subjects:
+            semester, subject = sub_attr.split('_')
+            credits = credits_dict[subject]
+            attr_ira = f'{semester}_ira'
+            attr_total = f'{semester}_total'
+            data[attr_ira] = data.apply(
+                lambda x: (
+                    x[attr_ira] + credits*grades[x[sub_attr]]
+                    if x[sub_attr] in grades else x[attr_ira]
+                ), axis=1
+            )
+            data[attr_total] = data.apply(
+                lambda x: (
+                    x[attr_total] + credits
+                    if x[sub_attr] in grades else x[attr_total]
+                ), axis=1
+            )
+
+        # Calculate the ira
+        for semester in range(1, 2*horizon+1):
+            attr_ira = f'{semester}_ira'
+            attr_total = f'{semester}_total'
+            data[attr_ira] = data.apply(
+                lambda x: (
+                    x[attr_ira] / x[attr_total] if x[attr_total] > 0 else 0
+                ), axis=1
+            )
+
         return data
 
-    data = beyond_horizon(data)
-    data = subject_semester(data)
+    def numerical_grades(data, subjects_freq):
+        """"Transform grades (mentions) into numbers."""
+        grades = {
+            'sr': -3,
+            'ii': -2,
+            'mi': -1,
+            'cc': 1,
+            'mm': 1,
+            'ms': 2,
+            'ss': 3
+        }
+        for sub in subjects_freq:
+            data[sub] = data.apply(
+                lambda x: grades[x[sub]] if x[sub] in grades else 0, axis=1
+            )
+        return data
 
     attr_subject = 'nome_disciplina'
     attr_grade = 'mencao_disciplina'
 
-    notas = {
-        'sr': -3,
-        'ii': -2,
-        'mi': -1,
-        'cc': 1,
-        'mm': 1,
-        'ms': 2,
-        'ss': 3
-    }
-    # Transform the grades (mentions) into an number
-    data[attr_grade] = data.apply(
-        lambda x: notas[x[attr_grade]] if x[attr_grade] in notas else 0, axis=1
-    )
+    # Find the "n_sub" most frequent subjects/semester.
+    n_sub = 25
+    subjects_freq = data[attr_subject].value_counts()[0:n_sub].index.to_list()
 
-    # Keep only the first occurrence of a subject/semester.
-    data.sort_values('periodo_cursou_disciplina')
-    data.drop_duplicates(subset=['aluno', attr_subject], inplace=True)
-
-    print(data['nome_disciplina'].value_counts()[:20])
-
-    # Keep only the 25 most frequent subjects/semester.
-    n_subjects = 25
-    subjects = data[attr_subject].value_counts()[0:n_subjects].index.to_list()
-    data.drop(data.loc[~data[attr_subject].isin(subjects)].index, inplace=True)
+    # Messy code to process ira TODO remove it
+    ira_subjects = data[attr_subject].value_counts()[0:100].index.to_list()
 
     # Removes attributes that are different for a single student
     # (so we can use pivot_table)
@@ -262,19 +325,29 @@ def subjects(data, attrs):
     ]
     data = data.drop(columns=out)
 
-    # Transform each subject into an attribute.
     index = data.columns.difference([attr_grade, attr_subject]).tolist()
+
+    # Transform each subject into an attribute.
     data = data.pivot_table(
         values=attr_grade,
         index=index,
         columns=attr_subject,
         aggfunc='first',
-        fill_value=0,  # Not Attended
+        fill_value='na',  # Not Attended
     ).reset_index()
     data.index.name = None
 
-    subjects = data.columns.difference(index).tolist()
-    attrs.extend(subjects)
+    subjects_attr = data.columns.difference(index).tolist()
+    data = credits_attr(data, subjects_attr, attrs, credits_dict, horizon)
+    data = ira_attr(data, ira_subjects, attrs, credits_dict, horizon)
+
+    # Keep only the most frequent subjects/semester.
+    subjects_rm = [sub for sub in subjects_attr if sub not in subjects_freq]
+    data = data.drop(columns=subjects_rm)
+
+    data = numerical_grades(data, subjects_freq)
+
+    attrs.extend(subjects_freq)
 
     return data
 
