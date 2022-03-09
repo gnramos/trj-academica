@@ -309,7 +309,7 @@ def subjects(data, attrs, horizon, credits_dict):
     attr_grade = 'mencao_disciplina'
 
     # Find the "n_sub" most frequent subjects/semester.
-    n_sub = 25
+    n_sub = 45
     subjects_freq = data[attr_subject].value_counts()[0:n_sub].index.to_list()
 
     # Messy code to process ira TODO remove it

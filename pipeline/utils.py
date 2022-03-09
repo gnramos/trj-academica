@@ -7,6 +7,7 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
+from sklearn.metrics import precision_recall_curve
 
 
 def write_json(json_info, file):
@@ -81,7 +82,7 @@ def plot_coordinates(data, title):
     plt.figure(figsize=(30, 40))
     plt.title(title)
     plt.scatter(x, y, c=c, alpha=0.2)
-    plt.savefig(f'img/{title}_plot.pdf')
+    # plt.savefig(f'img/{title}_plot.pdf')
     plt.show()
 
 
@@ -125,5 +126,18 @@ def plot_coordinates_density(data, title):
     )
     plt.colorbar()
 
-    plt.savefig(f'img/{title}.png')
+    # plt.savefig(f'img/{title}.png')
+    plt.show()
+
+
+def precision_recall_graph(model, X_test, y_test):
+    y_prob = model.predict_proba(X_test)
+    pos_probs = y_prob[:, 1]
+    precision, recall, _ = precision_recall_curve(
+        y_test, pos_probs, pos_label=1
+    )
+    plt.plot(recall, precision, marker='.')
+    plt.xlabel('Recall')
+    plt.ylabel('Precision')
+    plt.legend()
     plt.show()
