@@ -33,7 +33,7 @@ def best_threshold(model, X, y, BETA):
 
 def show_metrics(model, X_train, y_train, X_test, y_test):
     """
-    Show the accuracy, precision, recall and F-score
+    Show the accuracy, precision, recall and fscore
     for both the train and test data.
     """
     BETA = 1.5
@@ -44,16 +44,16 @@ def show_metrics(model, X_train, y_train, X_test, y_test):
         X_train, y_train, model, BETA, threshold
     )
     print('Treino:')
-    print(f'Accuracy = {100*accuracy:.2f}%')
-    print(f'Precision = {100*precision:.2f}%')
-    print(f'Recall = {100*recall:.2f}%')
-    print(f'FScore = {100*fscore:.2f}%')
+    print(f'    Accuracy = {100*accuracy:.2f}%')
+    print(f'    Precision = {100*precision:.2f}%')
+    print(f'    Recall = {100*recall:.2f}%')
+    print(f'    FScore = {100*fscore:.2f}%')
 
     accuracy, precision, recall, fscore = metrics(
         X_test, y_test, model, BETA, threshold
     )
     print('Teste:')
-    print(f'Accuracy = {100*accuracy:.2f}%')
-    print(f'Precision = {100*precision:.2f}%')
-    print(f'Recall = {100*recall:.2f}%')
-    print(f'FScore = {100*fscore:.2f}%')
+    print(f'    Accuracy = {100*accuracy:.2f}%')
+    print(f'    Precision = {100*precision:.2f}%')
+    print(f'    Recall = {100*recall:.2f}%')
+    print(f'    FScore = {100*fscore:.2f}%')
