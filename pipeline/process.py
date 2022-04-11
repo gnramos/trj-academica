@@ -5,8 +5,8 @@ from sklearn.metrics import precision_recall_curve
 import numpy as np
 
 
-def fbeta(precision, recall, beta):
-    return (1+beta**2) * (precision*recall) / (precision*beta**2 + recall)
+def fbeta(precision, recall, BETA):
+    return (1+BETA**2) * (precision*recall) / (precision*BETA**2 + recall)
 
 
 def metrics(X, y, model, BETA, threshold):
@@ -36,7 +36,7 @@ def show_metrics(model, X_train, y_train, X_test, y_test):
     Show the accuracy, precision, recall and fscore
     for both the train and test data.
     """
-    BETA = 1.5
+    BETA = 1.2
 
     threshold = best_threshold(model, X_train, y_train, BETA)
 

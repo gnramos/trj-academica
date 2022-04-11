@@ -81,7 +81,7 @@ def gender(data, attrs):
     return data
 
 
-def quota(data, attrs):
+def quota(data, attrs, attrs_cat):
     """Tranform the quota attribute in a boolean and rename it."""
     attr = 'sistema_cotas'
     newattr = 'quota'
@@ -93,7 +93,9 @@ def quota(data, attrs):
     newattr = 'quota_type'
     data[attr] = data[attr].fillna('universal')
     data = data.rename({attr: newattr}, axis=1)
-    # attrs.append(newattr)
+
+    attrs.append(newattr)
+    attrs_cat.append(newattr)
 
     return data
 
@@ -109,7 +111,7 @@ def public_school(data, attrs):
     return data
 
 
-def entry(data, attrs):
+def entry(data, attrs, attrs_cat):
     """
     Choose the four most frequent values for the entry form attribute,
     aggregate the others, and rename the attribute.
@@ -129,7 +131,8 @@ def entry(data, attrs):
     )
     data = data.rename({attr: newattr}, axis=1)
 
-    # attrs.append(newattr)
+    attrs.append(newattr)
+    attrs_cat.append(newattr)
     return data
 
 
@@ -212,9 +215,11 @@ def dropout(data, attrs):
     return data
 
 
-def one_hot_encoding(data, columns, attrs):
+def one_hot_encoding(data, columns, attrs, attrs_cat):
     """Apply the one-hot encoding in the columns."""
     for col in columns:
+        attrs.remove(col)
+        attrs_cat.remove(col)
         one_hot = pd.get_dummies(data[col])
         data = data.drop(col, axis=1)
         one_hot.columns = map(lambda x: f'{col}_{x}', one_hot.columns)
@@ -299,51 +304,36 @@ def subjects(data, attrs, horizon, credits_dict):
         return data
 
     def ira_attr(data, subjects, attrs, credits_dict, horizon):
-        """Add IRA attrivute per semester."""
+        """Add IRA attribute per semester."""
         grades = {'ss': 5, 'ms': 4, 'mm': 3, 'mi': 2, 'ii': 1, 'sr': 0}
+
+        # Initialize the attributes.
         for semester in range(1, 2*horizon+1):
             attrs.append(f'{semester}_ira')
             data[f'{semester}_ira'] = 0
-            data[f'{semester}_total'] = 0
+            data[f'{semester}_total'] = 0  # Accumulate total credits.
 
         for sub_attr in subjects:
             semester, subject = sub_attr.split('_')
             credits = credits_dict[subject]
-            attr_ira = f'{semester}_ira'
-            attr_total = f'{semester}_total'
-            data[attr_ira] = data.apply(
-                lambda x: (
-                    x[attr_ira] + credits*grades[x[sub_attr]]
-                    if x[sub_attr] in grades else x[attr_ira]
-                ), axis=1
-            )
-            data[attr_total] = data.apply(
-                lambda x: (
-                    x[attr_total] + credits
-                    if x[sub_attr] in grades else x[attr_total]
-                ), axis=1
-            )
+            for sem in range(int(semester), 2*horizon+1):
+                # Take into account for evetry semester before it.
+                attr_ira = f'{sem}_ira'
+                attr_total = f'{sem}_total'
+                data[attr_ira] = data.apply(
+                    lambda x: (
+                        x[attr_ira] + credits*grades[x[sub_attr]]
+                        if x[sub_attr] in grades else x[attr_ira]
+                    ), axis=1
+                )
+                data[attr_total] = data.apply(
+                    lambda x: (
+                        x[attr_total] + credits
+                        if x[sub_attr] in grades else x[attr_total]
+                    ), axis=1
+                )
 
-        # Accumulate
-        # TODO generate an subject list without semester prefix
-        # for semester in range(2, 2*horizon+1):
-        # for sub_attr in subjects:
-        #     semester_attr, subject = sub_attr.split('_')
-        #     if semester_attr != 2:
-        #         continue
-        #     attr_ira = f'{semester}_ira'
-        #     attr_ira_last = f'{semester-1}_ira'
-        #     attr_total = f'{semester}_total'
-        #     attr_total_last = f'{semester-1}_total'
-
-        #     data[attr_ira] = data.apply(
-        #         lambda x: (x[attr_ira] + x[attr_ira_last]), axis=1
-        #     )
-        #     data[attr_total] = data.apply(
-        #         lambda x: (x[attr_total] + x[attr_total_last]), axis=1
-        #     )
-
-        # Calculate the ira
+        # Calculate the ira.
         for semester in range(1, 2*horizon+1):
             attr_ira = f'{semester}_ira'
             attr_total = f'{semester}_total'
@@ -379,11 +369,12 @@ def subjects(data, attrs, horizon, credits_dict):
     n_sub = 25
     subjects_freq = data[attr_subject].value_counts()[0:n_sub].index.to_list()
 
-    # Messy code to process ira TODO remove it
+    # Calculate IRA only the "n_sub" most frequents subjects.
     ira_subjects = data[attr_subject].value_counts()[0:n_sub].index.to_list()
+    # ira_subjects = data[attr_subject].value_counts().index.to_list()
 
-    # Removes attributes that are different for a single student
-    # (so we can use pivot_table)
+    # Remove attributes that are different for a single student,
+    # so we can use pivot_table.
     out = [
         'periodo_cursou_disciplina',
         'creditos_no_periodo',
@@ -473,11 +464,22 @@ def cep(data, attrs):
     return data
 
 
-def divide_course(data):
-    """Return a dictionary with subsets of the data, separated by course."""
+def divide_course(data, attrs, attrs_cat):
+    """
+    Return one dictionary with subsets of the data, separated by course,
+    and other two dicts, informing the attributes of each subset.
+    """
     attr = 'course'
+    attrs_copy = attrs.copy()
+    attrs_copy.remove(attr)  # Remove course attribute
+
     data_course = {}
+    attrs_course = {}
+    attrs_cat_course = {}
+
     for course in data[attr].unique():
         data_course[course] = data.copy()[data[attr] == course]
+        attrs_course[course] = attrs_copy.copy()
+        attrs_cat_course[course] = attrs_cat.copy()
 
-    return data_course
+    return data_course, attrs_course, attrs_cat_course
