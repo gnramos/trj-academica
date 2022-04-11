@@ -29,7 +29,7 @@ def erase_attr(data):
     return data
 
 
-def erase_interal_transfer_students(data):
+def erase_internal_transfer_students(data):
     """
     Remove students that attended to other courses before their entry.
     Those students have done some subjects before their entry in the course,
@@ -192,10 +192,11 @@ def cic_courses(data):
     return data
 
 
-def time_frame(data, initial_year):
-    """Remove students with entry time before the initial_year value."""
+def time_frame(data, year_range):
+    """Remove students with entry time outside year_range."""
     attr = 'periodo_ingresso_curso'
-    data.drop(data.loc[data[attr] // 10 < initial_year].index, inplace=True)
+    data.drop(data.loc[data[attr] // 10 < year_range[0]].index, inplace=True)
+    data.drop(data.loc[data[attr] // 10 > year_range[1]].index, inplace=True)
     return data
 
 
