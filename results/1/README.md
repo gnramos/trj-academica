@@ -1,75 +1,98 @@
-# Results
+# Resultados
 
-* Timeframe [1990, 2022]
+* Timeframe [2004, 2022]
 * Todos os atributos
 
 ## ciência_da_computação
 Treino:
-*   Accuracy = 91.31%
-*   Precision = 88.89%
-*   Recall = 96.32%
-*   FScore = 93.13%
+*   Accuracy = 93.70%
+*   Precision = 93.68%
+*   Recall = 96.62%
+*   FScore = 95.39%
 
 Teste:
-*   Accuracy = 78.06%
-*   Precision = 77.00%
-*   Recall = 85.99%
-*   FScore = 82.07%
+*   Accuracy = 81.36%
+*   Precision = 83.42%
+*   Recall = 88.14%
+*   FScore = 86.14%
 
 ![summary_plot_ciência_da_computação](summary_plot_ciência_da_computação.png)
 ## computação
 Treino:
-*   Accuracy = 93.79%
-*   Precision = 95.71%
-*   Recall = 95.86%
-*   FScore = 95.80%
+*   Accuracy = 96.17%
+*   Precision = 97.47%
+*   Recall = 97.47%
+*   FScore = 97.47%
 
 Teste:
-*   Accuracy = 80.38%
-*   Precision = 84.38%
-*   Recall = 90.00%
-*   FScore = 87.61%
+*   Accuracy = 80.74%
+*   Precision = 86.19%
+*   Recall = 88.73%
+*   FScore = 87.67%
 
 ![summary_plot_computação](summary_plot_computação.png)
 ## engenharia_de_computação
 Treino:
-*   Accuracy = 92.93%
-*   Precision = 93.68%
-*   Recall = 95.56%
-*   FScore = 94.78%
+*   Accuracy = 93.35%
+*   Precision = 95.42%
+*   Recall = 94.24%
+*   FScore = 94.72%
 
 Teste:
-*   Accuracy = 75.61%
-*   Precision = 79.13%
-*   Recall = 85.05%
-*   FScore = 82.52%
+*   Accuracy = 76.54%
+*   Precision = 78.95%
+*   Recall = 86.54%
+*   FScore = 83.26%
 
 ![summary_plot_engenharia_de_computação](summary_plot_engenharia_de_computação.png)
 ## engenharia_mecatrônica
 Treino:
-*   Accuracy = 87.82%
-*   Precision = 81.29%
-*   Recall = 96.58%
-*   FScore = 89.67%
+*   Accuracy = 88.49%
+*   Precision = 85.51%
+*   Recall = 94.02%
+*   FScore = 90.34%
 
 Teste:
-*   Accuracy = 72.24%
-*   Precision = 67.22%
-*   Recall = 80.67%
-*   FScore = 74.56%
+*   Accuracy = 78.05%
+*   Precision = 73.68%
+*   Recall = 90.74%
+*   FScore = 82.88%
 
 ![summary_plot_engenharia_mecatrônica](summary_plot_engenharia_mecatrônica.png)
 ## all
 Treino:
-*   Accuracy = 87.90%
-*   Precision = 88.56%
-*   Recall = 91.57%
-*   FScore = 90.31%
+*   Accuracy = 86.40%
+*   Precision = 85.33%
+*   Recall = 95.44%
+*   FScore = 91.02%
 
 Teste:
-*   Accuracy = 77.42%
-*   Precision = 80.55%
-*   Recall = 81.99%
-*   FScore = 81.40%
+*   Accuracy = 79.13%
+*   Precision = 79.65%
+*   Recall = 91.06%
+*   FScore = 86.01%
 
 ![summary_plot_all](summary_plot_all.png)
+
+
+## Frequência:
+
+ciência_da_computação:
+* Evadido     591
+* Formado     339
+
+computação:
+* Evadido     679
+* Formado     218
+
+engenharia_de_computação:
+* Evadido     347
+* Formado     191
+
+engenharia_mecatrônica:
+* Evadido     359
+* Formado     324
+
+all:
+* Evadido     1976
+* Formado     1072

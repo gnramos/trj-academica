@@ -38,9 +38,22 @@ def erase_internal_transfer_students(data):
     """
     students = set()
     for _, row in data.iterrows():
-        entry = row['periodo_ingresso_curso']
-        subject = row['periodo_cursou_disciplina']
+        entry = int(row['periodo_ingresso_curso'])
+        subject = int(row['periodo_cursou_disciplina'])
         if utils.date_to_real(entry) > utils.date_to_real(subject):
+            students.add(row['aluno'])
+
+    data = data.drop(data.loc[data['aluno'].isin(students)].index)
+    return data
+
+
+def dropout_before_horizon(data, horizon):
+    """Remove students that droppedout before the horizon."""
+    students = set()
+    for _, row in data.iterrows():
+        entry = int(row['periodo_ingresso_curso'])
+        out = int(row['periodo_saida_curso'])
+        if utils.date_to_real(out) - utils.date_to_real(entry) < horizon - 0.5:
             students.add(row['aluno'])
 
     data = data.drop(data.loc[data['aluno'].isin(students)].index)
@@ -257,14 +270,15 @@ def add_semester_prefix(data):
     attended.
     Ex: calculo 1 -> 1_calculo 1
     """
-    def add_semester_prefix(row):
+    def prefix(row):
         semester = 1 + int(
             2 * utils.date_to_real(row['periodo_cursou_disciplina']) -
             2 * utils.date_to_real(row['periodo_ingresso_curso'])
         )
+
         return f"{semester}_{row['nome_disciplina']}"
 
-    data['nome_disciplina'] = data.apply(add_semester_prefix, axis=1)
+    data['nome_disciplina'] = data.apply(prefix, axis=1)
     return data
 
 
@@ -283,7 +297,7 @@ def subject_credits(data):
 def beyond_horizon(data, horizon):
     """
     Compare the student's entry with the semester the subject was attended,
-    and remove it if it was attended beyond the horizon.
+    and remove the subject it if it was attended beyond the horizon.
     """
     def hor(row):
         return (
