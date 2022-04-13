@@ -49,21 +49,23 @@ def erase_internal_transfer_students(data):
 
 def format_data(data):
     """
-    Remove leading and trailing spaces, and lowers all string elements.
-    Also removes accents from the subjects names.
+    Remove leading and trailing spaces, and lowers all string elements,
+    accents from the subjects names, and replaces spaces with underscores.
     """
-    def strip_accents(s):
+    def strip_accents(value):
         return ''.join(
-            c for c in unicodedata.normalize('NFD', s)
+            c for c in unicodedata.normalize('NFD', value)
             if unicodedata.category(c) != 'Mn'
         )
 
     def format(value):
-        return value.str.strip().str.lower()
+        return value.str.strip().str.lower().str.replace(' ', '_')
 
+    # Leading/trailing spaces, lower characters and underscores.
     data = data.apply(lambda x: format(x) if x.dtype == 'object' else x)
     data.columns = format(data.columns)
 
+    # Accents in subjects.
     attr = 'nome_disciplina'
     data[attr] = data[attr].apply(lambda x: strip_accents(x))
 
@@ -121,9 +123,9 @@ def entry(data, attrs, attrs_cat):
 
     entry_types = [
         'vestibular',
-        'programa de avaliação seriada',
-        'transferência obrigatória',
-        'sisu-sistema de seleção unificada',
+        'programa_de_avaliação seriada',
+        'transferência_obrigatória',
+        'sisu-sistema_de_seleção unificada',
     ]
 
     data[attr] = data.apply(
@@ -163,15 +165,15 @@ def course(data, attrs):
     newattr = 'course'
 
     data[attr] = data[attr].replace({
-        "engenharia mecatrônica - " +
-        "controle e automação": "engenharia mecatrônica",
-        "controle e automação": "engenharia mecatrônica",
+        "engenharia_mecatrônica_-_" +
+        "controle_e_automação": "engenharia_mecatrônica",
+        "controle_e_automação": "engenharia_mecatrônica",
 
         "informática": "computação",
 
-        "matematica - licenciatura noturno": "matemática",
-        "matematica - licenciatura diurno": "matemática",
-        "matematica - bacharelado diurno": "matemática"
+        "matematica_-_licenciatura noturno": "matemática",
+        "matematica_-_licenciatura diurno": "matemática",
+        "matematica_-_bacharelado diurno": "matemática"
     })
     data = data.rename({attr: newattr}, axis=1)
 
@@ -182,10 +184,10 @@ def course(data, attrs):
 def cic_courses(data):
     """Keep only courses from the computer science departament (CIC-UNB)"""
     cic_courses = [
-        'ciência da computação',
+        'ciência_da_computação',
         'computação',
-        'engenharia de computação',
-        'engenharia mecatrônica'
+        'engenharia_de_computação',
+        'engenharia_mecatrônica'
     ]
     attr = 'course'
     data.drop(data.loc[~data[attr].isin(cic_courses)].index, inplace=True)
@@ -197,7 +199,7 @@ def dataframe_specific_adjustments(data):
     # to be the same subject by renaming them.
     attr = 'nome_disciplina'
     data[attr] = data[attr].replace({
-        "computacao basica": "algoritmos e programacao de computadores",
+        "computacao_basica": "algoritmos_e_programacao_de_computadores",
     })
     return data
 
@@ -315,7 +317,7 @@ def subjects(data, attrs, horizon, credits_dict):
         approved = ['ss', 'ms', 'mm', 'cc']
 
         for sub_attr in subjects:
-            semester, subject = sub_attr.split('_')
+            semester, subject = sub_attr.split('_', 1)
             credits = credits_dict[subject]
             data.loc[data[sub_attr].isin(failed),
                      f'{semester}_failed_credits'] += credits
@@ -335,10 +337,10 @@ def subjects(data, attrs, horizon, credits_dict):
             data[f'{semester}_total'] = 0  # Accumulate total credits.
 
         for sub_attr in subjects:
-            semester, subject = sub_attr.split('_')
+            semester, subject = sub_attr.split('_', 1)
             credits = credits_dict[subject]
             for sem in range(int(semester), 2*horizon+1):
-                # Take into account for evetry semester before it.
+                # Take into account for every semester before it.
                 attr_ira = f'{sem}_ira'
                 attr_total = f'{sem}_total'
                 data[attr_ira] = data.apply(

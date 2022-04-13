@@ -31,29 +31,36 @@ def best_threshold(model, X, y, BETA):
     return threshold
 
 
-def show_metrics(model, X_train, y_train, X_test, y_test):
+def log_metrics(model, X_train, y_train, X_test, y_test, course):
     """
-    Show the accuracy, precision, recall and fscore
+    Log the accuracy, precision, recall and fscore
     for both the train and test data.
     """
     BETA = 1.2
 
     threshold = best_threshold(model, X_train, y_train, BETA)
 
-    accuracy, precision, recall, fscore = metrics(
-        X_train, y_train, model, BETA, threshold
-    )
-    print('Treino:')
-    print(f'    Accuracy = {100*accuracy:.2f}%')
-    print(f'    Precision = {100*precision:.2f}%')
-    print(f'    Recall = {100*recall:.2f}%')
-    print(f'    FScore = {100*fscore:.2f}%')
+    with open('results/README.md', 'a+') as f:
 
-    accuracy, precision, recall, fscore = metrics(
-        X_test, y_test, model, BETA, threshold
-    )
-    print('Teste:')
-    print(f'    Accuracy = {100*accuracy:.2f}%')
-    print(f'    Precision = {100*precision:.2f}%')
-    print(f'    Recall = {100*recall:.2f}%')
-    print(f'    FScore = {100*fscore:.2f}%')
+        accuracy, precision, recall, fscore = metrics(
+            X_train, y_train, model, BETA, threshold
+        )
+
+        f.write(f'## {course}\n')
+
+        f.write('Treino:\n')
+        f.write(f'*   Accuracy = {100*accuracy:.2f}%\n')
+        f.write(f'*   Precision = {100*precision:.2f}%\n')
+        f.write(f'*   Recall = {100*recall:.2f}%\n')
+        f.write(f'*   FScore = {100*fscore:.2f}%\n')
+        f.write('\n')
+
+        accuracy, precision, recall, fscore = metrics(
+            X_test, y_test, model, BETA, threshold
+        )
+        f.write('Teste:\n')
+        f.write(f'*   Accuracy = {100*accuracy:.2f}%\n')
+        f.write(f'*   Precision = {100*precision:.2f}%\n')
+        f.write(f'*   Recall = {100*recall:.2f}%\n')
+        f.write(f'*   FScore = {100*fscore:.2f}%\n')
+        f.write('\n')
