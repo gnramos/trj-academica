@@ -192,6 +192,26 @@ def cic_courses(data):
     return data
 
 
+def dataframe_specific_adjustments(data):
+    # Consider 'computacao basica' & 'algoritmos e programacao de computadores'
+    # to be the same subject by renaming them.
+    attr = 'nome_disciplina'
+    data[attr] = data[attr].replace({
+        "computacao basica": "algoritmos e programacao de computadores",
+    })
+    return data
+
+
+def remove_anomalies(data):
+    """
+    Remove students with more than 60 credits in the first semester
+    (probably caused by a system problem).
+    """
+    attr = '1_approved_credits'
+    data.drop(data.loc[data[attr] > 60].index, inplace=True)
+    return data
+
+
 def time_frame(data, year_range):
     """Remove students with entry time outside year_range."""
     attr = 'periodo_ingresso_curso'
