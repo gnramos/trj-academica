@@ -383,13 +383,32 @@ def subjects(data, attrs, horizon, credits_dict):
             data[sub] = data.apply(
                 lambda x: grades[x[sub]] if x[sub] in grades else 0, axis=1
             )
+
+        # Prefix maximum the subject's grade.
+        for sub_attr in subjects_freq:
+            semester, subject = sub_attr.split('_', 1)
+            for sem in range(int(semester)+1, 2*horizon+1):
+                # Take into account for every semester after it.
+                attr_after = f'{sem}_{subject}'
+                if attr_after in data.columns:
+                    data[attr_after] = data.apply(
+                        lambda x: max(x[attr_after], x[sub_attr]), axis=1)
+
+        # Faster prefix maximum (horizon == 2)
+        # for sub_attr in subjects_freq:
+        #     if sub_attr.startswith('2'):
+        #         sub_attr_last = f'1{sub_attr[1:]}'
+        #         if sub_attr_last in data.columns:
+        #             data[sub_attr] = data.apply(
+        #                 lambda x: max(x[sub_attr], x[sub_attr_last]), axis=1)
+
         return data
 
     attr_subject = 'nome_disciplina'
     attr_grade = 'mencao_disciplina'
 
     # Find the "n_sub" most frequent subjects/semester.
-    n_sub = 25
+    n_sub = 30
     subjects_freq = data[attr_subject].value_counts()[0:n_sub].index.to_list()
 
     # Calculate IRA only the "n_sub" most frequents subjects.
@@ -423,21 +442,11 @@ def subjects(data, attrs, horizon, credits_dict):
     data = credits_attr(data, subjects_attr, attrs, credits_dict, horizon)
     data = ira_attr(data, ira_subjects, attrs, credits_dict, horizon)
 
-    # TODO implement for a variable horizon value
-    # Prefix maximum the subject's grade.
-
     # Keep only the most frequent subjects/semester.
     subjects_rm = [sub for sub in subjects_attr if sub not in subjects_freq]
     data = data.drop(columns=subjects_rm)
 
     data = numerical_grades(data, subjects_freq)
-
-    for sub_attr in subjects_freq:
-        if sub_attr.startswith('2'):
-            sub_attr_last = f'1{sub_attr[1:]}'
-            if sub_attr_last in data.columns:
-                data[sub_attr] = data.apply(
-                    lambda x: max(x[sub_attr], x[sub_attr_last]), axis=1)
 
     attrs.extend(subjects_freq)
 
