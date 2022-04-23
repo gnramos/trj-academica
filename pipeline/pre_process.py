@@ -223,7 +223,8 @@ def remove_anomalies(data):
     (probably caused by a system problem).
     """
     attr = '1_approved_credits'
-    data.drop(data.loc[data[attr] > 60].index, inplace=True)
+    if attr in data.columns:
+        data.drop(data.loc[data[attr] > 60].index, inplace=True)
     return data
 
 
@@ -322,10 +323,16 @@ def subjects(data, attrs, horizon, credits_dict):
         as attributes.
         """
         for semester in range(1, 2*horizon+1):
-            attrs.append(f'{semester}_failed_credits')
-            attrs.append(f'{semester}_approved_credits')
-            data[f'{semester}_failed_credits'] = 0
-            data[f'{semester}_approved_credits'] = 0
+            # attrs.append(f'{semester}_failed_credits')
+            # attrs.append(f'{semester}_approved_credits')
+            # data[f'{semester}_failed_credits'] = 0
+            # data[f'{semester}_approved_credits'] = 0
+            attrs.append(f'{semester}_relative_credits')
+            attrs.append(f'{semester}_absolute_credits')
+            attrs.append(f'{semester}_total_credits')
+            data[f'{semester}_relative_credits'] = 0
+            data[f'{semester}_absolute_credits'] = 0
+            data[f'{semester}_total_credits'] = 0
 
         failed = ['sr', 'ii', 'mi', 'tr']
         approved = ['ss', 'ms', 'mm', 'cc']
@@ -333,10 +340,26 @@ def subjects(data, attrs, horizon, credits_dict):
         for sub_attr in subjects:
             semester, subject = sub_attr.split('_', 1)
             credits = credits_dict[subject]
-            data.loc[data[sub_attr].isin(failed),
-                     f'{semester}_failed_credits'] += credits
-            data.loc[data[sub_attr].isin(approved),
-                     f'{semester}_approved_credits'] += credits
+
+            # data.loc[data[sub_attr].isin(failed),
+            #          f'{semester}_failed_credits'] += credits
+            # data.loc[data[sub_attr].isin(approved),
+            #          f'{semester}_approved_credits'] += credits
+
+            attr_absolute = f'{semester}_absolute_credits'
+            attr_relative = f'{semester}_relative_credits'
+            attr_total = f'{semester}_total_credits'
+
+            data.loc[data[sub_attr].isin(approved), attr_absolute] += credits
+            data.loc[data[sub_attr].isin(approved+failed),
+                     attr_total] += credits
+
+            data[attr_relative] = data.apply(
+                lambda x: (
+                    100 * x[attr_absolute] / x[attr_total]
+                    if x[attr_total] > 0 else 0
+                ), axis=1
+            )
 
         return data
 

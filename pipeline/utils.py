@@ -141,3 +141,52 @@ def precision_recall_graph(model, X_test, y_test):
     plt.ylabel('Precision')
     plt.legend()
     plt.show()
+
+
+def bar_freq(data, col, sort=False):
+    """
+    Show a bar graph with frequencies of a specific attribute.
+    Parameters:
+        - col: attribute analised
+        - data: dataframe
+        - sort: sort frequencies by their x coordinate value
+    """
+    def add_values_above_bar(grouped_data, graph, col):
+        """
+        Show values above the bars of the graph.
+        """
+        for _, row in grouped_data.iterrows():
+            graph.text(row.name, row[col], round(row[col], 2),
+                       color='black', ha="center", fontsize=12)
+
+    # Saves a graph with occurrence of the 'col' attribute
+    grouped_data = data[col].value_counts(ascending=True).reset_index()
+    if sort:
+        grouped_data = grouped_data.sort_values('index').reset_index()
+    # treat as a string (sns.barplot will order if int)
+    grouped_data = grouped_data.astype({'index': 'string'})
+
+    plt.style.use('seaborn-talk')
+    graph = sns.barplot(
+        x='index',
+        y=grouped_data[col],
+        data=grouped_data,
+        palette='Blues',
+        # palette='mako',
+    )
+
+    # visual enhancements
+    plt.ylabel('Quantidade')
+    plt.xlabel(col)
+    plt.xticks(rotation=90)
+    # plt.tight_layout()
+
+    # show values in the graph
+    add_values_above_bar(grouped_data, graph, col)
+
+    # save and show the graph
+    # graph.figure.savefig(f'{col}.png', dpi=300)
+    plt.savefig(
+        f'graphs/{col}.png', dpi=200, bbox_inches='tight', facecolor='#ffffff'
+    )
+    plt.show()

@@ -2,6 +2,9 @@ data/
 pipeline/.ipynb_checkpoints/
 /.vscode
 pipeline/catboost_info/
+pipeline/graphs/
+pipeline/results/
+
 
 *.pyc
 *.pyo
