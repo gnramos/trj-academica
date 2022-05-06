@@ -85,6 +85,18 @@ def format_data(data):
     return data
 
 
+def remove_nan(data):
+    """
+    Complete missing data from quota attribute with universal quota.
+    This is done before all preprocesses, because we can't have NaN values
+    when using pivot_table.
+    https://github.com/pandas-dev/pandas/issues/3729
+    """
+    attr = 'cota'
+    data[attr] = data[attr].fillna('universal')
+    return data
+
+
 def gender(data, attrs):
     """Tranform the gender attribute in a boolean and rename it."""
     attr = 'genero'
@@ -106,7 +118,6 @@ def quota(data, attrs, attrs_cat):
 
     attr = 'cota'
     newattr = 'quota_type'
-    data[attr] = data[attr].fillna('universal')
     data = data.rename({attr: newattr}, axis=1)
 
     attrs.append(newattr)
@@ -354,12 +365,8 @@ def subjects(data, attrs, horizon, credits_dict):
             data.loc[data[sub_attr].isin(approved+failed),
                      attr_total] += credits
 
-            data[attr_relative] = data.apply(
-                lambda x: (
-                    100 * x[attr_absolute] / x[attr_total]
-                    if x[attr_total] > 0 else 0
-                ), axis=1
-            )
+            data[attr_relative] = 100 * data[attr_absolute] / data[attr_total]
+            data[attr_relative] = data[attr_relative].fillna(0)
 
         return data
 
@@ -397,11 +404,8 @@ def subjects(data, attrs, horizon, credits_dict):
         for semester in range(1, 2*horizon+1):
             attr_ira = f'{semester}_ira'
             attr_total = f'{semester}_total'
-            data[attr_ira] = data.apply(
-                lambda x: (
-                    x[attr_ira] / x[attr_total] if x[attr_total] > 0 else 0
-                ), axis=1
-            )
+            data[attr_ira] = data[attr_ira] / data[attr_total]
+            data[attr_ira] = data[attr_ira].fillna(0)
 
         return data
 

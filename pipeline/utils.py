@@ -7,6 +7,7 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
+from itertools import product
 from sklearn.metrics import precision_recall_curve
 
 
@@ -188,5 +189,58 @@ def bar_freq(data, col, sort=False):
     # graph.figure.savefig(f'{col}.png', dpi=300)
     plt.savefig(
         f'graphs/{col}.png', dpi=200, bbox_inches='tight', facecolor='#ffffff'
+    )
+    plt.show()
+
+
+def double_bar_graph(data, attr1, attr2):
+    """
+    Show graph attr1 - attr2
+    """
+    graph = data[[attr1, attr2]].value_counts(ascending=True)
+    graph = graph.reset_index(name='count')
+    graph = graph.sort_values(attr1).reset_index()
+
+    g = sns.catplot(
+        x=attr1,
+        y='count',
+        hue=attr2,
+        data=graph,
+        kind='bar',
+        legend_out=True,
+        palette='seismic'
+    )
+    # g.fig.set_figwidth(40)
+    # g.fig.set_figheight(20)
+
+    plt.ylabel('Quantidade')
+    plt.xlabel(attr1)
+    plt.xticks(rotation=90)
+    # plt.legend()
+    g.legend.set_title(attr2)
+    # plt.tight_layout()
+
+    class_order = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+    hue_order = [False, True]
+    bar_order = product(hue_order, class_order)
+
+    spots = zip(g.ax.patches, bar_order)
+    for _, spot in enumerate(spots):
+        class_total = len(data[data[attr1] == spot[1][1]])
+        class_who_total = len(
+            data[(data[attr1] == spot[1][1]) & (data[attr2] == spot[1][0])]
+        )
+
+        if(class_total == 0 or class_who_total == 0):
+            continue
+
+        height = spot[0].get_height()
+        g.ax.text(
+            spot[0].get_x(), height+3,
+            '{:1.0f}%'.format(100 * class_who_total / class_total)
+        )
+    plt.savefig(
+        f'graphs/{attr1}.png', dpi=200,
+        bbox_inches='tight', facecolor='#ffffff'
     )
     plt.show()
