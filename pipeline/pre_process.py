@@ -1,10 +1,36 @@
 # Pre Process Module
 
-from hashlib import new
-from types import new_class
 import pandas as pd
 import unicodedata
 import utils
+
+
+def map_columns(data):
+    """Map new data_frame columns to the old dataframe."""
+    types = {
+        'periodo_ingressou_unb': float,
+        'periodo_ingressou_curso': float,
+        'ano_conclusao_2_grau': float,
+        'periodo_saida_curso': float,
+        'periodo_cursou_disciplina': float,
+        'creditos_disciplina': float
+    }
+    data = data.astype(types)
+
+    data = data.loc[:, ~data.columns.str.startswith('Unnamed:')]
+    map_names = {
+        'sistema': 'sistema_origem',
+        'ira': 'IRA',
+        'segundo_grau_tipo_escola': 'Escola',
+        'chamada_ingressou_unb': 'chamada_ingressou_UnB',
+        'ano_conclusao_2_grau': 'ano_ensino_medio',
+        'periodo_ingressou_unb': 'periodo_ingresso_unb',
+        'periodo_ingressou_curso': 'periodo_ingresso_curso',
+        'creditos_aprovados_no_periodo': 'creditos_aprovado_periodo',
+    }
+
+    data = data.rename(map_names, axis=1)
+    return data
 
 
 def erase_attr(data):
@@ -147,9 +173,9 @@ def entry(data, attrs, attrs_cat):
 
     entry_types = [
         'vestibular',
-        'programa_de_avaliação seriada',
+        'programa_de_avaliação_seriada',
         'transferência_obrigatória',
-        'sisu-sistema_de_seleção unificada',
+        'sisu-sistema_de_seleção_unificada',
     ]
 
     data[attr] = data.apply(
@@ -233,7 +259,7 @@ def remove_anomalies(data):
     Remove students with more than 60 credits in the first semester
     (probably caused by a system problem).
     """
-    attr = '1_approved_credits'
+    attr = '1_absolute_credits'
     if attr in data.columns:
         data.drop(data.loc[data[attr] > 60].index, inplace=True)
     return data
@@ -340,7 +366,7 @@ def subjects(data, attrs, horizon, credits_dict):
             # data[f'{semester}_approved_credits'] = 0
             attrs.append(f'{semester}_relative_credits')
             attrs.append(f'{semester}_absolute_credits')
-            attrs.append(f'{semester}_total_credits')
+            # attrs.append(f'{semester}_total_credits')
             data[f'{semester}_relative_credits'] = 0
             data[f'{semester}_absolute_credits'] = 0
             data[f'{semester}_total_credits'] = 0
@@ -432,6 +458,7 @@ def subjects(data, attrs, horizon, credits_dict):
                 # Take into account for every semester after it.
                 attr_after = f'{sem}_{subject}'
                 if attr_after in data.columns:
+                    # data[attr_after] = max(data[attr_after], data[sub_attr])
                     data[attr_after] = data.apply(
                         lambda x: max(x[attr_after], x[sub_attr]), axis=1)
 

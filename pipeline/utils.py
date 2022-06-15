@@ -193,7 +193,7 @@ def bar_freq(data, col, sort=False):
     plt.show()
 
 
-def double_bar_graph(data, attr1, attr2):
+def double_bar_graph(data, attr1, attr2, ratio=True, size=(10, 10)):
     """
     Show graph attr1 - attr2
     """
@@ -210,8 +210,8 @@ def double_bar_graph(data, attr1, attr2):
         legend_out=True,
         palette='seismic'
     )
-    # g.fig.set_figwidth(40)
-    # g.fig.set_figheight(20)
+    g.fig.set_figheight(size[0])
+    g.fig.set_figwidth(size[1])
 
     plt.ylabel('Quantidade')
     plt.xlabel(attr1)
@@ -220,25 +220,29 @@ def double_bar_graph(data, attr1, attr2):
     g.legend.set_title(attr2)
     # plt.tight_layout()
 
-    class_order = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-    hue_order = [False, True]
-    bar_order = product(hue_order, class_order)
+    if(ratio):
+        class_order = data[attr1].unique()
+        class_order.sort()
+        hue_order = data[attr2].unique()
+        hue_order.sort()
+        bar_order = product(hue_order, class_order)
 
-    spots = zip(g.ax.patches, bar_order)
-    for _, spot in enumerate(spots):
-        class_total = len(data[data[attr1] == spot[1][1]])
-        class_who_total = len(
-            data[(data[attr1] == spot[1][1]) & (data[attr2] == spot[1][0])]
-        )
+        spots = zip(g.ax.patches, bar_order)
+        for _, spot in enumerate(spots):
+            class_total = len(data[data[attr1] == spot[1][1]])
+            class_who_total = len(
+                data[(data[attr1] == spot[1][1]) & (data[attr2] == spot[1][0])]
+            )
 
-        if(class_total == 0 or class_who_total == 0):
-            continue
+            if(class_total == 0 or class_who_total == 0):
+                continue
 
-        height = spot[0].get_height()
-        g.ax.text(
-            spot[0].get_x(), height+3,
-            '{:1.0f}%'.format(100 * class_who_total / class_total)
-        )
+            height = spot[0].get_height()
+            g.ax.text(
+                spot[0].get_x(), height+3,
+                '{:1.0f}%'.format(100 * class_who_total / class_total)
+            )
+
     plt.savefig(
         f'graphs/{attr1}.png', dpi=200,
         bbox_inches='tight', facecolor='#ffffff'

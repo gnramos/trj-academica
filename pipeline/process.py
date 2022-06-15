@@ -64,3 +64,12 @@ def log_metrics(model, X_train, y_train, X_test, y_test, course):
         f.write(f'*   Recall = {100*recall:.2f}%\n')
         f.write(f'*   FScore = {100*fscore:.2f}%\n')
         f.write('\n')
+
+
+def log_params(params):
+    with open('results/README.md', 'a+') as f:
+
+        f.write('Parametros:\n')
+        for p, v in params.items():
+            f.write(f'*   {p} = {v}\n')
+        f.write('\n')
