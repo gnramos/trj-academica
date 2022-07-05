@@ -1,15 +1,15 @@
 ## ciência_da_computação
 Treino:
-*   Accuracy = 69.27%
-*   Precision = 67.85%
-*   Recall = 98.59%
-*   FScore = 83.15%
+*   Accuracy = 68.97%
+*   Precision = 67.69%
+*   Recall = 98.36%
+*   FScore = 82.95%
 
 Teste:
-*   Accuracy = 62.02%
-*   Precision = 63.50%
-*   Recall = 95.08%
-*   FScore = 78.98%
+*   Accuracy = 63.07%
+*   Precision = 64.31%
+*   Recall = 94.54%
+*   FScore = 79.27%
 
 Parametros:
 *   depth = 4
@@ -19,35 +19,35 @@ Parametros:
 ![summary_plot_ciência_da_computação](summary_plot_ciência_da_computação.png)
 ## computação
 Treino:
-*   Accuracy = 80.56%
-*   Precision = 80.71%
-*   Recall = 97.55%
-*   FScore = 89.86%
+*   Accuracy = 79.94%
+*   Precision = 79.67%
+*   Recall = 98.57%
+*   FScore = 89.83%
 
 Teste:
-*   Accuracy = 72.40%
-*   Precision = 75.77%
-*   Recall = 93.36%
-*   FScore = 85.25%
+*   Accuracy = 73.12%
+*   Precision = 75.76%
+*   Recall = 94.79%
+*   FScore = 85.94%
 
 Parametros:
-*   depth = 4
+*   depth = 6
 *   l2_leaf_reg = 1
 *   learning_rate = 0.01
 
 ![summary_plot_computação](summary_plot_computação.png)
 ## engenharia_de_computação
 Treino:
-*   Accuracy = 77.19%
-*   Precision = 76.61%
-*   Recall = 93.00%
-*   FScore = 85.51%
+*   Accuracy = 76.92%
+*   Precision = 76.17%
+*   Recall = 93.42%
+*   FScore = 85.49%
 
 Teste:
-*   Accuracy = 59.88%
-*   Precision = 64.89%
-*   Recall = 81.73%
-*   FScore = 73.87%
+*   Accuracy = 61.73%
+*   Precision = 65.67%
+*   Recall = 84.62%
+*   FScore = 75.67%
 
 Parametros:
 *   depth = 4
@@ -57,39 +57,39 @@ Parametros:
 ![summary_plot_engenharia_de_computação](summary_plot_engenharia_de_computação.png)
 ## engenharia_mecatrônica
 Treino:
-*   Accuracy = 68.02%
-*   Precision = 64.04%
-*   Recall = 88.72%
-*   FScore = 76.62%
+*   Accuracy = 67.01%
+*   Precision = 62.80%
+*   Recall = 90.66%
+*   FScore = 76.72%
 
 Teste:
-*   Accuracy = 58.77%
-*   Precision = 57.42%
-*   Recall = 80.91%
-*   FScore = 69.29%
+*   Accuracy = 60.66%
+*   Precision = 58.39%
+*   Recall = 85.45%
+*   FScore = 71.81%
 
 Parametros:
-*   depth = 4
-*   l2_leaf_reg = 1
+*   depth = 6
+*   l2_leaf_reg = 5
 *   learning_rate = 0.01
 
 ![summary_plot_engenharia_mecatrônica](summary_plot_engenharia_mecatrônica.png)
 ## all
 Treino:
-*   Accuracy = 67.96%
-*   Precision = 67.41%
-*   Recall = 97.88%
-*   FScore = 82.58%
+*   Accuracy = 66.36%
+*   Precision = 66.01%
+*   Recall = 99.15%
+*   FScore = 82.23%
 
 Teste:
-*   Accuracy = 65.10%
-*   Precision = 66.06%
-*   Recall = 94.89%
-*   FScore = 80.49%
+*   Accuracy = 64.99%
+*   Precision = 65.35%
+*   Recall = 97.86%
+*   FScore = 81.28%
 
 Parametros:
-*   depth = 6
-*   l2_leaf_reg = 3
+*   depth = 4
+*   l2_leaf_reg = 7
 *   learning_rate = 0.01
 
 ![summary_plot_all](summary_plot_all.png)

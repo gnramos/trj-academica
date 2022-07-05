@@ -135,7 +135,10 @@ def gender(data, attrs):
 
 
 def quota(data, attrs, attrs_cat):
-    """Tranform the quota attribute in a boolean and rename it."""
+    """
+    Tranform the quota attribute in a boolean and
+    group some of the quota_type values, and rename it.
+    """
     attr = 'sistema_cotas'
     newattr = 'quota'
     data[attr] = data.apply(lambda x: x[attr] == 'sim', axis=1)
@@ -144,6 +147,18 @@ def quota(data, attrs, attrs_cat):
 
     attr = 'cota'
     newattr = 'quota_type'
+
+    data[attr] = data[attr].replace({
+
+        "escola_pública_alta_renda-ppi": "publico_alta_renda",
+        "escola_púb._alta_renda-não_ppi": "publico_alta_renda",
+        "escola_púb_alta_renda-ppi-pcd": "publico_alta_renda",
+
+        "escola_pública_baixa_renda-ppi": "publico_baixa_renda",
+        "escola_púb_baixa_renda-não_ppi": "publico_baixa_renda",
+
+        "indígena": "outros"
+    })
     data = data.rename({attr: newattr}, axis=1)
 
     attrs.append(newattr)

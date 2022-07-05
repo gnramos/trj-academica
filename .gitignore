@@ -4,6 +4,7 @@ pipeline/.ipynb_checkpoints/
 pipeline/catboost_info/
 pipeline/graphs/
 pipeline/results/
+results/old
 
 
 *.pyc
