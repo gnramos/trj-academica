@@ -244,7 +244,7 @@ def double_bar_graph(data, attr1, attr2, ratio=True, size=(10, 10)):
             )
 
     plt.savefig(
-        f'graphs/{attr1}.png', dpi=200,
+        f'/home/raphaela/Documentos/unb/pibic/trj-academica/results/graphs/{attr1}.png', dpi=200,
         bbox_inches='tight', facecolor='#ffffff'
     )
     plt.show()

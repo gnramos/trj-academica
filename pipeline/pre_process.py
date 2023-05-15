@@ -3,6 +3,7 @@
 import pandas as pd
 import unicodedata
 import utils
+import math
 
 
 def map_columns(data):
@@ -11,7 +12,7 @@ def map_columns(data):
         'periodo_ingressou_unb': float,
         'periodo_ingressou_curso': float,
         'ano_conclusao_2_grau': float,
-        'periodo_saida_curso': float,
+        # 'periodo_saida_curso': float,
         'periodo_cursou_disciplina': float,
         'creditos_disciplina': float
     }
@@ -65,7 +66,11 @@ def erase_internal_transfer_students(data):
     students = set()
     for _, row in data.iterrows():
         entry = int(row['periodo_ingresso_curso'])
-        subject = int(row['periodo_cursou_disciplina'])
+        periodo_cursou_disciplina = row['periodo_cursou_disciplina']
+        if not math.isnan(periodo_cursou_disciplina):
+            subject = int(periodo_cursou_disciplina)
+        else:
+            continue
         if utils.date_to_real(entry) > utils.date_to_real(subject):
             students.add(row['aluno'])
 
