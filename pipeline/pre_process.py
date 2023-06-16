@@ -8,9 +8,9 @@ import utils
 def map_columns(data):
     """Map new data_frame columns to the old dataframe."""
     types = {
-        'periodo_ingressou_unb': float,
-        'periodo_ingressou_curso': float,
-        'ano_conclusao_2_grau': float,
+        'periodo_ingresso_unb': float,
+        'periodo_ingresso_curso': float,
+        'ano_ensino_medio': float,
         'periodo_saida_curso': float,
         'periodo_cursou_disciplina': float,
         'creditos_disciplina': float
@@ -22,10 +22,10 @@ def map_columns(data):
         'sistema': 'sistema_origem',
         'ira': 'IRA',
         'segundo_grau_tipo_escola': 'Escola',
-        'chamada_ingressou_unb': 'chamada_ingressou_UnB',
-        'ano_conclusao_2_grau': 'ano_ensino_medio',
-        'periodo_ingressou_unb': 'periodo_ingresso_unb',
-        'periodo_ingressou_curso': 'periodo_ingresso_curso',
+        'chamada_ingresso_unb': 'chamada_ingresso_UnB',
+        'ano_ensino_medio': 'ano_ensino_medio',
+        'periodo_ingresso_unb': 'periodo_ingresso_unb',
+        'periodo_ingresso_curso': 'periodo_ingresso_curso',
         'creditos_aprovados_no_periodo': 'creditos_aprovado_periodo',
     }
 

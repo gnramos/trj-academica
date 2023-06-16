@@ -40,7 +40,7 @@ def log_metrics(model, X_train, y_train, X_test, y_test, course):
 
     threshold = best_threshold(model, X_train, y_train, BETA)
 
-    with open('results/README.md', 'a+') as f:
+    with open('/home/raphaela/Documentos/unb/pibic/trj-academica-dados-novos/results/README.md', 'a+') as f:
 
         accuracy, precision, recall, fscore = metrics(
             X_train, y_train, model, BETA, threshold
@@ -67,7 +67,7 @@ def log_metrics(model, X_train, y_train, X_test, y_test, course):
 
 
 def log_params(params):
-    with open('results/README.md', 'a+') as f:
+    with open('/home/raphaela/Documentos/unb/pibic/trj-academica-dados-novos/results/README.md', 'a+') as f:
 
         f.write('Parametros:\n')
         for p, v in params.items():
